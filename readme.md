@@ -1,4 +1,4 @@
-[![Bare Conductive](https://www.dropbox.com/s/ltnp128s2ueq040/LOGO_249x99.png?dl=1)](http://www.bareconductive.com/)
+[![Bare Conductive](https://www.dropbox.com/s/p0p71yid2t8tenp/LOGO_256x106.png?dl=1)](http://www.bareconductive.com/)
 
 # Bare Conductive Touch and Proximity USB MIDI interface code
 This is an extension of the simple touch-to-USB-MIDI code for the [Bare Conductive Touch Board](http://www.bareconductive.com/shop/touch-board/) which adds generic support for both touch buttons and proximity sensors.
