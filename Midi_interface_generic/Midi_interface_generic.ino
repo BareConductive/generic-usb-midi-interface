@@ -155,13 +155,19 @@ void loop() {
       Serial.print(":");                          // this prints some Serial debug data for ease of mapping
       Serial.println(MPR121.getFilteredData(i));  // e.g. E11:567 means E11 has value 567 (this is the input data)
 
-      e.type = 0x08;
-      e.m1 = 0xB0; // control change message
-      e.m2 = MIDIobjects[i].controllerNumber;     // select the correct controller number - you should use numbers
-                                                  // between 102 and 119 unless you know what you are doing
       // output the correctly mapped value from the input
       e.m3 = (unsigned char)constrain(map(MPR121.getFilteredData(i), MIDIobjects[i].inputMin, MIDIobjects[i].inputMax, MIDIobjects[i].outputMin, MIDIobjects[i].outputMax), 0, 127);
-      MIDIUSB.write(e);
+
+      if(e.m3!=MIDIobjects[i].lastOutput){ // only output a new controller value if it has changed since last time
+
+        MIDIobjects[i].lastOutput=e.m3;
+
+        e.type = 0x08;
+        e.m1 = 0xB0; // control change message
+        e.m2 = MIDIobjects[i].controllerNumber;     // select the correct controller number - you should use numbers
+                                                    // between 102 and 119 unless you know what you are doing
+        MIDIUSB.write(e);
+      }
     }
   }
 

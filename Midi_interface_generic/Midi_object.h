@@ -49,6 +49,7 @@ struct midi_object_t
 	unsigned char controllerNumber;
 	unsigned char outputMax;
 	unsigned char outputMin;	
+	unsigned char lastOutput;
 
 	// raw inputs from electrode filtered data
 	unsigned int inputMax;
@@ -63,6 +64,7 @@ struct midi_object_t
 	controllerNumber(0),
 	outputMax(127),
 	outputMin(0),
+	lastOutput(0),
 	inputMax(1023),
 	inputMin(0)
 	{}
