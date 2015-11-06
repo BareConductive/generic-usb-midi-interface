@@ -23,14 +23,13 @@
 #ifndef COMPILER_ERRORS_H
 #define COMPILER_ERRORS_H
 
-	// ARcore only works with
-	// Arduino >= 1.5.6
-	#if ARDUINO < 156 
-	  #error Please upgrade your Arduino IDE to 1.5.6 or greater
+	// we only support Arduino 1.6.6 or greater
+	#if ARDUINO < 10606
+	  #error Please upgrade your Arduino IDE to 1.6.6 or greater
 	#else 
-		// for correct functionality, we need to ensure that 
+		// check that Bare Conductive Touch Board (USB MIDI, iPad compatible) is selected in Tools -> Board
 		#if !defined(ARDUINO_AVR_BARETOUCH) || !defined(IPAD_COMPAT)
-		 	#error Please select "Bare Conductive Touch Board (arcore, iPad compatible)" in the Tools -> Board menu.
+		 	#error Please select "Bare Conductive Touch Board (USB MIDI, iPad compatible)" in the Tools -> Board menu.
 		#endif
  	#endif
 

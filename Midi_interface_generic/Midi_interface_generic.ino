@@ -9,9 +9,8 @@
  (relatively) simple manner. See the comments for details and experiment
  for best results.
  
- Requires Arduino 1.5.6+ or greater and ARCore Hardware Cores 
- https://github.com/rkistner/arcore - remember to select 
- Bare Conductive Touch Board (arcore, iPad compatible) in the Tools -> Board menu
+ Remember to select Bare Conductive Touch Board (USB MIDI, iPad compatible) 
+ in the Tools -> Board menu
  
  Bare Conductive code written by Stefan Dzisiewski-Smith.
  
@@ -28,10 +27,13 @@
 
 *******************************************************************************/
 
+// compiler error handling
+#include "Compiler_Errors.h"
+
 #include <MPR121.h>
 #include <Wire.h>
 #include "Midi_object.h"
-#include "Compiler_Errors.h"
+
 MIDIEvent e;
 
 #define numElectrodes 12
@@ -45,62 +47,211 @@ void setup() {
   MPR121.begin(0x5C);
   MPR121.setInterruptPin(4);
 
-  // set up electrode 0 as a very sensitive proxmity key attached to note 50
-  MIDIobjects[0].type = MIDI_NOTE;
-  MIDIobjects[0].noteNumber = 50;
-  MIDIobjects[0].touchThreshold = 4;    // always make sure that the touch threshold is
-  MIDIobjects[0].releaseThreshold = 2;  // larger than the release threshold
+  // *************************
+  // Proximity (CC) electrodes
+  // *************************
 
-  // set up electrode 1 as a touch key attached to note 51
-  MIDIobjects[1].type = MIDI_NOTE;
-  MIDIobjects[1].noteNumber = 51;
-  MIDIobjects[1].touchThreshold = 40;   // higher values = less sensitivity = trigger by touch, not proximity
-  MIDIobjects[1].releaseThreshold = 20;  
+  // set up electrode 0 as a proxmity mapped controller attached to controller 102
+  MIDIobjects[0].type = MIDI_CONTROL;
+  MIDIobjects[0].controllerNumber = 102; // 102..119 are undefined in the MIDI specification
+  MIDIobjects[0].inputMin = 520;  // note than inputMin is greater than inputMax here
+                                  // this means that the closer your hand is to the sensor 
+                                  // the higher the output value will be
+                                  // to reverse the mapping, make inputMax greater than inputMin 
+  MIDIobjects[0].inputMax = 480;  // the further apart the inputMin and inputMax are from each other 
+                                  // the larger of a range the sensor will work over
+  MIDIobjects[0].outputMin = 0;   // minimum output to controller - smallest valid value is 0
+  MIDIobjects[0].outputMax = 127; // maximum output to controller - largest valid value is 127
 
-  // set up electrode 2 as a touch key attached to note 52
-  MIDIobjects[2].type = MIDI_NOTE;
-  MIDIobjects[2].noteNumber = 52;
-  MIDIobjects[2].touchThreshold = 40;
-  MIDIobjects[2].releaseThreshold = 20;   
+  
+  // set up electrode 1 as a proxmity mapped controller attached to controller 103
+  MIDIobjects[1].type = MIDI_CONTROL;
+  MIDIobjects[1].controllerNumber = 103; 
+  MIDIobjects[1].inputMin = 520;  
+  MIDIobjects[1].inputMax = 480;  
+  MIDIobjects[1].outputMin = 0;   
+  MIDIobjects[1].outputMax = 127; 
 
-  // set up electrode 3 as a touch key attached to note 53
-  MIDIobjects[3].type = MIDI_NOTE;
-  MIDIobjects[3].noteNumber = 53;
-  MIDIobjects[3].touchThreshold = 40;
-  MIDIobjects[3].releaseThreshold = 20;   
+  // set up electrode 2 as a proxmity mapped controller attached to controller 104
+  MIDIobjects[2].type = MIDI_CONTROL;
+  MIDIobjects[2].controllerNumber = 104; 
+  MIDIobjects[2].inputMin = 520;  
+  MIDIobjects[2].inputMax = 480;  
+  MIDIobjects[2].outputMin = 0;  
+  MIDIobjects[2].outputMax = 127; 
 
-  // set up electrode 4 as a very sensitive proxmity key attached to note 54
-  MIDIobjects[4].type = MIDI_NOTE;
-  MIDIobjects[4].noteNumber = 54;
-  MIDIobjects[4].touchThreshold = 20;    // note lower values here mean more sensitivity
-  MIDIobjects[4].releaseThreshold = 10;  // i.e. trigger by proximity, not touch  
+  // set up electrode 3 as a proxmity mapped controller attached to controller 105
+  MIDIobjects[3].type = MIDI_CONTROL;
+  MIDIobjects[3].controllerNumber = 105; 
+  MIDIobjects[3].inputMin = 520;  
+  MIDIobjects[3].inputMax = 480;  
+  MIDIobjects[3].outputMin = 0;  
+  MIDIobjects[3].outputMax = 127; 
 
-  // set up electrode 5 as a proxmity mapped controller attached to controller 102
+  // set up electrode 4 as a proxmity mapped controller attached to controller 106
+  MIDIobjects[4].type = MIDI_CONTROL;
+  MIDIobjects[4].controllerNumber = 106;
+  MIDIobjects[4].inputMin = 520;  
+  MIDIobjects[4].inputMax = 480;  
+  MIDIobjects[4].outputMin = 0;   
+  MIDIobjects[4].outputMax = 127; 
+
+  // set up electrode 5 as a proxmity mapped controller attached to controller 107
   MIDIobjects[5].type = MIDI_CONTROL;
-  MIDIobjects[5].controllerNumber = 102; // 102..119 are undefined and so very useful for this
-  MIDIobjects[5].inputMin = 490;  // minimum input from Touch Board - see Serial monitor for these values
-                                  // to help in setting sensible min and max with / without hand in place
-  MIDIobjects[5].inputMax = 530;  // maximum input from Touch Board
-  MIDIobjects[5].outputMin = 0;   // minimum output to controller - smallest valid value is 0
-  MIDIobjects[5].outputMax = 127; // minimum output to controller - largest valid value is 127
+  MIDIobjects[5].controllerNumber = 107; 
+  MIDIobjects[5].inputMin = 520;  
+  MIDIobjects[5].inputMax = 480;  
+  MIDIobjects[5].outputMin = 0;  
+  MIDIobjects[5].outputMax = 127; 
 
-  // set up electrode 6 as a proxmity mapped controller attached to controller 103
+  // set up electrode 6 as a proxmity mapped controller attached to controller 108
   MIDIobjects[6].type = MIDI_CONTROL;
-  MIDIobjects[6].controllerNumber = 103;
-  MIDIobjects[6].inputMin = 520;  // note than min is greater than max here - that means that the direction is reversed
-  MIDIobjects[6].inputMax = 480;  // i.e. closer hand is higher value, not lower
-  MIDIobjects[6].outputMin = 0;
+  MIDIobjects[6].controllerNumber = 108;
+  MIDIobjects[6].inputMin = 520;  
+  MIDIobjects[6].inputMax = 480;  
+  MIDIobjects[6].outputMin = 0;   
   MIDIobjects[6].outputMax = 127; 
+  
+  // set up electrode 7 as a proxmity mapped controller attached to controller 109
+  MIDIobjects[7].type = MIDI_CONTROL;
+  MIDIobjects[7].controllerNumber = 109;
+  MIDIobjects[7].inputMin = 520; 
+  MIDIobjects[7].inputMax = 480;  
+  MIDIobjects[7].outputMin = 0;   
+  MIDIobjects[7].outputMax = 127; 
+  
+  // set up electrode 8 as a proxmity mapped controller attached to controller 110
+  MIDIobjects[8].type = MIDI_CONTROL;
+  MIDIobjects[8].controllerNumber = 110;
+  MIDIobjects[8].inputMin = 520; 
+  MIDIobjects[8].inputMax = 480;  
+  MIDIobjects[8].outputMin = 0;   
+  MIDIobjects[8].outputMax = 127; 
+  
+  // set up electrode 9 as a proxmity mapped controller attached to controller 111
+  MIDIobjects[9].type = MIDI_CONTROL;
+  MIDIobjects[9].controllerNumber = 111;
+  MIDIobjects[9].inputMin = 520; 
+  MIDIobjects[9].inputMax = 480;  
+  MIDIobjects[9].outputMin = 0;   
+  MIDIobjects[9].outputMax = 127; 
+  
+  // set up electrode 10 as a proxmity mapped controller attached to controller 112
+  MIDIobjects[10].type = MIDI_CONTROL;
+  MIDIobjects[10].controllerNumber = 112;
+  MIDIobjects[10].inputMin = 520; 
+  MIDIobjects[10].inputMax = 480; 
+  MIDIobjects[10].outputMin = 0;   
+  MIDIobjects[10].outputMax = 127; 
 
-  // skip out electrodes 7..10
-
-  // set up electrode 11 as a proxmity mapped controller attached to controller 104
+  // set up electrode 11 as a proxmity mapped controller attached to controller 113
   MIDIobjects[11].type = MIDI_CONTROL;
-  MIDIobjects[11].controllerNumber = 104;
-  MIDIobjects[11].inputMin = 490;
-  MIDIobjects[11].inputMax = 570;
-  MIDIobjects[11].outputMin = 0;
+  MIDIobjects[11].controllerNumber = 113;
+  MIDIobjects[11].inputMin = 520; 
+  MIDIobjects[11].inputMax = 480;  
+  MIDIobjects[11].outputMin = 0;   
   MIDIobjects[11].outputMax = 127; 
+
+  // ***********************
+  // Touch (note) electrodes
+  // ***********************
+
+  // If you want to configure the electrodes as note outputs (as opposed to proximity
+  // CC) you need to do the following two things:
+  //
+  // 1. Uncomment the section below
+  //
+  // 2. Comment out the "Proximity (CC) electrodes" section above entirely. This makes sure
+  //    that the two sections will not interfere with one another.
+  //
+
+  // You can also pick and choose between the two, for example having electrode 0 as a 
+  // proximity electrode and electrode 1 as a touch electrode. You do this by:
+  //
+  // 1. Commenting out the lines relating to electrode 1 in the "Proximity (CC) electrodes" 
+  //    section - that is the six lines beginning with "MIDIobjects[1]"
+  //
+  // 2. Uncommenting the lines relating to electrode 1 in the "Touch (note) electrodes"
+  //    section - that is the 4 lines below that start with "MIDIobjects[1]"
+  //
+  // The important thing to remember is that you must not have two sections active for the 
+  // same electrode.
+
+
+  // // set up electrode 0 as a touch sensitive key attached to note 60
+  // MIDIobjects[0].type = MIDI_NOTE;
+  // MIDIobjects[0].noteNumber = 60;       // middle C
+  // MIDIobjects[0].touchThreshold = 40;   // always make sure that the touch threshold is
+  // MIDIobjects[0].releaseThreshold = 20; // larger than the release threshold - larger values
+  //                                       // are less sensitive (and more robust)
+  // 
+  // // set up electrode 1 as a touch sensitive key attached to note 61
+  // MIDIobjects[1].type = MIDI_NOTE;
+  // MIDIobjects[1].noteNumber = 61;           
+  // MIDIobjects[1].touchThreshold = 40;  
+  // MIDIobjects[1].releaseThreshold = 20; 
+  //
+  // // set up electrode 2 as a touch sensitive key attached to note 62
+  // MIDIobjects[2].type = MIDI_NOTE;
+  // MIDIobjects[2].noteNumber = 62;           
+  // MIDIobjects[2].touchThreshold = 40;  
+  // MIDIobjects[2].releaseThreshold = 20; 
+  //
+  // // set up electrode 3 as a touch sensitive key attached to note 63
+  // MIDIobjects[3].type = MIDI_NOTE;
+  // MIDIobjects[3].noteNumber = 63;
+  // MIDIobjects[3].touchThreshold = 40;  
+  // MIDIobjects[3].releaseThreshold = 20; 
+  //
+  // // set up electrode 4 as a touch sensitive key attached to note 64
+  // MIDIobjects[4].type = MIDI_NOTE;
+  // MIDIobjects[4].noteNumber = 64;           
+  // MIDIobjects[4].touchThreshold = 40;  
+  // MIDIobjects[4].releaseThreshold = 20; 
+  //
+  // // set up electrode 5 as a touch sensitive key attached to note 65
+  // MIDIobjects[5].type = MIDI_NOTE;
+  // MIDIobjects[5].noteNumber = 65;
+  // MIDIobjects[5].touchThreshold = 40;  
+  // MIDIobjects[5].releaseThreshold = 20; 
+  //
+  // // set up electrode 6 as a touch sensitive key attached to note 66
+  // MIDIobjects[6].type = MIDI_NOTE;
+  // MIDIobjects[6].noteNumber = 66;
+  // MIDIobjects[6].touchThreshold = 40;  
+  // MIDIobjects[6].releaseThreshold = 20; 
+  //
+  // // set up electrode 7 as a touch sensitive key attached to note 67
+  // MIDIobjects[7].type = MIDI_NOTE;
+  // MIDIobjects[7].noteNumber = 67;
+  // MIDIobjects[7].touchThreshold = 40;  
+  // MIDIobjects[7].releaseThreshold = 20; 
+  //
+  // // set up electrode 8 as a touch sensitive key attached to note 68
+  // MIDIobjects[8].type = MIDI_NOTE;
+  // MIDIobjects[8].noteNumber = 68;
+  // MIDIobjects[8].touchThreshold = 40;  
+  // MIDIobjects[8].releaseThreshold = 20; 
+  //
+  // // set up electrode 9 as a touch sensitive key attached to note 69
+  // MIDIobjects[9].type = MIDI_NOTE;
+  // MIDIobjects[9].noteNumber = 69;
+  // MIDIobjects[9].touchThreshold = 40;  
+  // MIDIobjects[9].releaseThreshold = 20; 
+  //
+  // // set up electrode 10 as a touch sensitive key attached to note 70
+  // MIDIobjects[10].type = MIDI_NOTE;
+  // MIDIobjects[10].noteNumber = 70;
+  // MIDIobjects[10].touchThreshold = 40;  
+  // MIDIobjects[10].releaseThreshold = 20; 
+  //
+  // // set up electrode 11 as a touch sensitive key attached to note 71
+  // MIDIobjects[11].type = MIDI_NOTE;
+  // MIDIobjects[11].noteNumber = 71;
+  // MIDIobjects[11].touchThreshold = 40;  
+  // MIDIobjects[11].releaseThreshold = 20; 
+
+
 
   // set touch and release thresholds for electrodes that require it
   for(int i=0; i<numElectrodes; i++){
