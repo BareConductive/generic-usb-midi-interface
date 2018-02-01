@@ -45,7 +45,8 @@
 #include <Wire.h>
 #include "Midi_object.h"
 
-MIDIEvent e;
+MIDIEvent e; 
+uint8_t channel = 0; // edit to change the channel number
 
 #define numElectrodes 12
 midi_object_t MIDIobjects[numElectrodes]; // create an array of MIDI objects to use (one for each electrode)
@@ -289,15 +290,15 @@ void loop() {
           // if we have a new touch, turn on the onboard LED and
           // send a "note on" message with the appropriate note set
           digitalWrite(LED_BUILTIN, HIGH);
-          e.m1 = 0x90; 
+          e.m1 = uint8_t(0x9 << 4 | channel); 
         } else if(MPR121.isNewRelease(i)){
           // if we have a new release, turn off the onboard LED and
           // send a "note off" message
           digitalWrite(LED_BUILTIN, LOW);
-          e.m1 = 0x80;
+          e.m1 = uint8_t(0x8 << 4 | channel);
         } else {
           // else set a flag to do nothing...
-          e.m1 = 0x00;  
+          e.m1 = uint8_t(0x0 << 4 | channel);  
         }
         // only send a USB MIDI message if we need to
         if(e.m1 != 0x00){
@@ -325,7 +326,7 @@ void loop() {
         MIDIobjects[i].lastOutput=e.m3;
 
         e.type = 0x08;
-        e.m1 = 0xB0; // control change message
+        e.m1 = uint8_t(0xB << 4 | channel);
         e.m2 = MIDIobjects[i].controllerNumber;     // select the correct controller number - you should use numbers
                                                     // between 102 and 119 unless you know what you are doing
         MIDIUSB.write(e);
