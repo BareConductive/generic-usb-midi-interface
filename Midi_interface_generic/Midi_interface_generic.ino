@@ -60,17 +60,16 @@ const bool MPR121_DATASTREAM_ENABLE = false;
 
 // MIDI instantiation
 MIDIEvent e;
+
+// MIDI variable
 midi_object_type MIDIobjects[12];  // create an array of MIDI objects to use (one for each electrode)
 
-// MIDI variables
-uint8_t channel = 0;  // edit to change the channel number
-
 // MIDI behaviour constants
-const bool SET_MIDI_CONTROL = true;
+const uint8_t CHANNEL = 0;  // edit to change the channel number
+const bool SET_MIDI_CONTROL = true;  // set to false to set up electrodes as touch sensitive keys
 
 void setup() {
   Serial.begin(BAUD_RATE);
-
   pinMode(LED_BUILTIN, OUTPUT);
 
   if (!MPR121.begin(MPR121_ADDR)) {
@@ -104,10 +103,6 @@ void setup() {
   MPR121.setInterruptPin(MPR121_INT);
 
   if (SET_MIDI_CONTROL) {
-    // *************************
-    // Proximity (CC) electrodes
-    // *************************
-
     // set up electrode 0 as a proxmity mapped controller attached to controller 102
     MIDIobjects[0].type = MIDI_CONTROL;
     MIDIobjects[0].controllerNumber = 102;  // 102..119 are undefined in the MIDI specification
@@ -209,10 +204,6 @@ void setup() {
     MIDIobjects[11].outputMin = 0;
     MIDIobjects[11].outputMax = 127;
   } else {
-    // ***********************
-    // Touch (note) electrodes
-    // ***********************
-
     // set up electrode 0 as a touch sensitive key attached to note 60
     MIDIobjects[0].type = MIDI_NOTE;
     MIDIobjects[0].noteNumber = 60;  // middle C
@@ -274,13 +265,11 @@ void setup() {
 
   MPR121.setFFI(FFI_10);
   MPR121.setSFI(SFI_10);
-
-  pinMode(LED_BUILTIN, OUTPUT);
+  MPR121.setGlobalCDT(CDT_4US);  // reasonable for larger capacitances
+  
   digitalWrite(LED_BUILTIN, HIGH);  // switch on user LED while auto calibrating electrodes
-
-  MPR121.setGlobalCDT(CDT_4US);  // reasonable for larger capacitances at the end of long cables when using Interactive Wall Kit
-  MPR121.autoSetElectrodeCDC();  // autoset all electrode settings
-
+  delay(1000);
+  MPR121.autoSetElectrodes();  // autoset all electrode settings
   digitalWrite(LED_BUILTIN, LOW);
 }
 
@@ -298,15 +287,15 @@ void loop() {
         // if we have a new touch, turn on the onboard LED and
         // send a "note on" message with the appropriate note set
         digitalWrite(LED_BUILTIN, HIGH);
-        e.m1 = uint8_t(0x9 << 4 | channel);
+        e.m1 = uint8_t(0x9 << 4 | CHANNEL);
       } else if (MPR121.isNewRelease(i)) {
         // if we have a new release, turn off the onboard LED and
         // send a "note off" message
         digitalWrite(LED_BUILTIN, LOW);
-        e.m1 = uint8_t(0x8 << 4 | channel);
+        e.m1 = uint8_t(0x8 << 4 | CHANNEL);
       } else {
         // else set a flag to do nothing...
-        e.m1 = uint8_t(0x0 << 4 | channel);
+        e.m1 = uint8_t(0x0 << 4 | CHANNEL);
       }
 
       // only send a USB MIDI message if we need to
@@ -330,7 +319,7 @@ void loop() {
       if (e.m3 != MIDIobjects[i].lastOutput) {  // only output a new controller value if it has changed since last time
         MIDIobjects[i].lastOutput = e.m3;
         e.type = 0x08;
-        e.m1 = uint8_t(0xB << 4 | channel);
+        e.m1 = uint8_t(0xB << 4 | CHANNEL);
         e.m2 = MIDIobjects[i].controllerNumber;  // select the correct controller number - you should use numbers
                                                 // between 102 and 119 unless you know what you are doing
         MIDIUSB.write(e);
